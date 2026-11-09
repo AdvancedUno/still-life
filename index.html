@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Still Life: a museum heist where your webcam is the guard</title>
+  <meta name="description" content="A stealth game in your browser. Steal real paintings from the Art Institute of Chicago while a guard watches through your webcam and listens through your microphone.">
+  <meta name="theme-color" content="#0e1917">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='7' y='7' width='50' height='50' fill='%2318302b' stroke='%23c9a54c' stroke-width='10'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;family=Spectral:ital,wght@0,400;0,500;1,400;1,500&amp;display=swap">
+  <link rel="preconnect" href="https://api.artic.edu" crossorigin>
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the game</a>
+
+  <header class="site-header">
+    <a class="wordmark" href="#main" id="home-link">Still Life</a>
+    <nav class="site-nav" aria-label="Game">
+      <button type="button" class="nav-button" id="hideout-link">
+        Hideout <span class="count" id="hideout-count">0</span>
+      </button>
+      <button type="button" class="nav-button" id="sound-toggle">Mute sound</button>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- Title -->
+    <section class="screen screen-title" id="screen-title" aria-labelledby="title-heading">
+      <div class="hero">
+        <div class="hero-frame">
+          <span class="picture-light" aria-hidden="true"></span>
+          <div class="gilt-frame gilt-frame-ornate">
+            <div class="frame-canvas">
+              <h1 class="frame-title" id="title-heading" tabindex="-1">Still Life</h1>
+            </div>
+          </div>
+        </div>
+        <div class="wall-label hero-label">
+          <h2 class="label-heading">A heist in one gallery</h2>
+          <p class="label-medium">Webcam, microphone, and one very bored guard</p>
+          <p>Steal real paintings from the Art Institute of Chicago. The guard watches through your camera and listens through your mic. When his footsteps stop, hold perfectly still.</p>
+          <p class="label-credit" id="record-line">No record yet. Keep it that way.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="button button-primary" id="plan-button">Plan a heist</button>
+        <button type="button" class="button" id="title-hideout-button">Visit your hideout</button>
+      </div>
+    </section>
+
+    <!-- The guard's senses (camera and microphone permissions) -->
+    <section class="screen screen-setup" id="screen-setup" aria-labelledby="setup-heading" hidden>
+      <h2 id="setup-heading" tabindex="-1">Give the guard his senses</h2>
+      <p class="lede">He borrows your devices tonight. Turn on both for the full game, one for an easier night, or neither to play with the keyboard alone. Video and sound are checked inside your browser. Nothing is recorded or sent anywhere.</p>
+
+      <div class="senses">
+        <article class="sense" id="sense-camera" data-state="off" aria-labelledby="camera-heading">
+          <h3 id="camera-heading">His eyes: your webcam</h3>
+          <div class="monitor">
+            <video id="setup-video" muted playsinline autoplay aria-label="Preview of your webcam"></video>
+            <p class="monitor-empty">Camera off</p>
+          </div>
+          <div class="meter" id="camera-meter" aria-hidden="true"></div>
+          <p class="sense-status" id="camera-status" role="status">Off. He can’t see you move.</p>
+          <button type="button" class="button" id="camera-button">Turn on camera</button>
+        </article>
+
+        <article class="sense" id="sense-mic" data-state="off" aria-labelledby="mic-heading">
+          <h3 id="mic-heading">His ears: your microphone</h3>
+          <div class="monitor monitor-audio">
+            <div class="meter meter-large" id="mic-meter" aria-hidden="true"></div>
+            <p class="monitor-empty">Microphone off</p>
+          </div>
+          <p class="sense-status" id="mic-status" role="status">Off. He can’t hear you.</p>
+          <button type="button" class="button" id="mic-button">Turn on microphone</button>
+        </article>
+      </div>
+
+      <p class="mode-summary" id="mode-summary">Keyboard only: any key press, click, or mouse movement while he’s looking can give you away.</p>
+      <div class="actions">
+        <button type="button" class="button button-primary" id="choose-target-button">Choose a painting</button>
+      </div>
+    </section>
+
+    <!-- Briefing -->
+    <section class="screen screen-briefing" id="screen-briefing" aria-labelledby="briefing-heading" hidden>
+      <h2 id="briefing-heading" tabindex="-1">Tonight’s painting</h2>
+
+      <p class="notice" id="briefing-loading" role="status">Checking which paintings are on the walls tonight…</p>
+
+      <div class="notice notice-error" id="briefing-error" role="alert" hidden>
+        <p id="briefing-error-message">The museum’s collection couldn’t be reached.</p>
+        <button type="button" class="button" id="retry-button">Try again</button>
+      </div>
+
+      <div class="briefing" id="briefing-body" hidden>
+        <figure class="artwork briefing-artwork">
+          <div class="gilt-frame">
+            <img id="briefing-image" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+          </div>
+          <figcaption class="wall-label" id="briefing-label"></figcaption>
+        </figure>
+
+        <div class="briefing-notes">
+          <p class="briefing-level" id="briefing-level">Heist 1</p>
+          <p class="essential-note" id="briefing-essential" hidden>This is one of the museum’s essential works. The guard turns around faster and looks longer.</p>
+          <h3>How to take it</h3>
+          <ol class="steps">
+            <li>Hold <kbd>Space</kbd> or the sneak button to creep toward the painting.</li>
+            <li>When the footsteps stop, let go. He’s turning around.</li>
+            <li>While he looks, stay still and quiet. He can’t hear you while he’s talking.</li>
+          </ol>
+          <div class="actions">
+            <button type="button" class="button button-primary" id="start-heist-button">Start the heist</button>
+            <button type="button" class="button" id="reroll-button">Pick a different painting</button>
+          </div>
+          <button type="button" class="button button-quiet" id="change-senses-button">Change camera and microphone</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- The heist -->
+    <section class="screen screen-heist" id="screen-heist" aria-labelledby="heist-heading" hidden>
+      <div class="heist-bar">
+        <h2 class="heist-heading" id="heist-heading" tabindex="-1">Heist <span id="heist-number">1</span>: <cite id="heist-target">Untitled</cite></h2>
+        <p class="heist-location" id="heist-location">Art Institute of Chicago</p>
+      </div>
+
+      <div class="stage" id="stage" data-phase="away">
+        <div class="stage-wall" aria-hidden="true">
+          <span class="dim-frame"></span>
+          <span class="dim-frame"></span>
+        </div>
+        <div class="stage-floor" aria-hidden="true"></div>
+
+        <div class="stage-painting">
+          <span class="picture-light" aria-hidden="true"></span>
+          <div class="gilt-frame gilt-frame-small">
+            <img id="stage-image" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+          </div>
+        </div>
+
+        <div class="doorway" aria-hidden="true"></div>
+
+        <div class="guard" aria-hidden="true">
+          <div class="guard-figure">
+            <span class="guard-beam"></span>
+            <svg class="guard-svg" viewBox="0 0 60 120" focusable="false">
+              <path d="M23 76 21 118h8l2-30 2 30h8l-2-42z"/>
+              <path d="M19 41c6-5 16-5 22 0l2 37H17z"/>
+              <path d="M23 46 9 55l2 4 15-7z"/>
+              <rect x="2" y="53" width="9" height="5.5" rx="1.5"/>
+              <rect class="guard-lens" x="1" y="54" width="2" height="3.5" rx="0.8"/>
+              <circle cx="30" cy="29" r="8"/>
+              <path d="M21.5 26c1-8 16-10 17.5-1v1.5H21.5z"/>
+              <path d="M22 25.5 13 27.5l9 1.5z"/>
+              <circle class="guard-badge" cx="25.5" cy="49" r="1.7"/>
+            </svg>
+          </div>
+          <span class="guard-alert">?</span>
+        </div>
+
+        <div class="thief" aria-hidden="true">
+          <svg class="thief-svg" viewBox="0 0 60 96" focusable="false">
+            <path class="thief-sack" d="M17 33c-9 3-13 14-9 24 3 7 12 8 15 1z"/>
+            <path d="M17 35c9-8 21-6 26 4l2 23c-9 4-19 4-26 0z"/>
+            <path d="M21 60 15 79l-4 15h9l4-14 6-18z"/>
+            <path d="M35 61l7 17-2 16h9l1-17-6-17z"/>
+            <path d="M39 41l15 6-1 4-16-4z"/>
+            <circle cx="40" cy="23" r="8"/>
+            <path class="thief-beanie" d="M32 21c1-9 15-11 16-1v1.5H32z"/>
+            <rect class="thief-eyes" x="40" y="21.5" width="7.5" height="2.4" rx="1.2"/>
+          </svg>
+        </div>
+
+        <p class="guard-caption" id="guard-caption" aria-live="polite"></p>
+        <div class="stage-flash" aria-hidden="true"></div>
+      </div>
+
+      <div class="hud">
+        <div class="hud-status">
+          <p class="guard-status" id="guard-status" data-phase="away" role="status">His back is turned. Move.</p>
+          <div class="readout">
+            <span id="suspicion-label">Suspicion</span>
+            <div class="meter meter-suspicion" id="suspicion-meter" role="meter" aria-labelledby="suspicion-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+          </div>
+          <div class="readout">
+            <label for="distance">Distance</label>
+            <progress id="distance" max="100" value="0">0%</progress>
+            <span class="readout-value" id="distance-text">70 ft to go</span>
+          </div>
+        </div>
+
+        <div class="hud-senses">
+          <figure class="cctv" id="cctv">
+            <video id="heist-video" muted playsinline autoplay aria-label="Gallery camera showing your webcam"></video>
+            <figcaption>Gallery camera <span id="cctv-clock"></span></figcaption>
+          </figure>
+          <div class="readout" id="motion-readout">
+            <span>Movement</span>
+            <div class="meter" id="motion-meter" aria-hidden="true"></div>
+          </div>
+          <div class="readout" id="noise-readout">
+            <span>Noise</span>
+            <div class="meter" id="noise-meter" aria-hidden="true"></div>
+          </div>
+          <p class="senses-note" id="senses-note">He can see and hear you.</p>
+        </div>
+
+        <div class="hud-controls">
+          <button type="button" class="sneak-button" id="sneak-button">Hold to sneak</button>
+          <p class="hint">or hold <kbd>Space</kbd></p>
+          <button type="button" class="button button-quiet" id="abort-button">Abort the heist</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Busted -->
+    <section class="screen screen-caught" id="screen-caught" aria-labelledby="caught-heading" hidden>
+      <div class="outcome">
+        <div class="outcome-text">
+          <h2 id="caught-heading" tabindex="-1">Busted.</h2>
+          <p class="lede" id="caught-reason">He caught you.</p>
+          <h3>The charge</h3>
+          <p class="charge-intro">Attempted theft of</p>
+          <div class="wall-label" id="charge-label"></div>
+          <div class="actions">
+            <button type="button" class="button button-primary" id="retry-heist-button">Try again</button>
+            <button type="button" class="button" id="new-target-button">Choose another painting</button>
+          </div>
+          <a class="button button-quiet" id="download-mugshot" href="#main" download="still-life-mugshot.png" hidden>Download your mugshot</a>
+        </div>
+        <figure class="mugshot">
+          <canvas id="mugshot-canvas" width="720" height="900" role="img" aria-label="Your booking photo"></canvas>
+          <figcaption>Booking photo. It stays on this device unless you download it.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Clean getaway -->
+    <section class="screen screen-escaped" id="screen-escaped" aria-labelledby="escaped-heading" hidden>
+      <div class="outcome">
+        <div class="outcome-text">
+          <h2 id="escaped-heading" tabindex="-1">Clean getaway.</h2>
+          <p class="lede" id="escaped-summary">It’s hanging in your hideout now.</p>
+          <div class="actions">
+            <button type="button" class="button button-primary" id="next-heist-button">Plan the next heist</button>
+            <button type="button" class="button" id="escaped-hideout-button">Visit your hideout</button>
+          </div>
+        </div>
+        <figure class="artwork escaped-artwork">
+          <div class="gilt-frame">
+            <img id="escaped-image" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+          </div>
+          <figcaption class="wall-label" id="escaped-label"></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Hideout -->
+    <section class="screen screen-hideout" id="screen-hideout" aria-labelledby="hideout-heading" hidden>
+      <h2 id="hideout-heading" tabindex="-1">Your hideout</h2>
+      <p class="lede" id="hideout-summary">Bare walls, for now.</p>
+      <ul class="salon" id="hideout-grid"></ul>
+      <div class="empty-state" id="hideout-empty" hidden>
+        <p>Your first painting is hanging in Chicago right now.</p>
+        <button type="button" class="button button-primary" id="hideout-plan-button">Plan a heist</button>
+      </div>
+      <div class="actions">
+        <button type="button" class="button button-quiet" id="return-all-button">Return every painting</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Paintings, labels, and images come live from the <a href="https://api.artic.edu/docs/">Art Institute of Chicago API</a>. Every target is a public-domain painting.</p>
+    <p>Your camera and microphone are analyzed in this browser tab. Nothing is recorded or uploaded.</p>
+  </footer>
+</body>
+</html>

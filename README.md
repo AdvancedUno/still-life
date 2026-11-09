@@ -10,7 +10,7 @@ A stealth game in the browser. You steal real paintings from the Art Institute o
 4. When the footsteps stop, let go. While he looks, any sneaking gets you caught immediately, and movement or noise fills his suspicion meter.
 5. Get caught and you get a booking photo. Get away and the painting goes to your hideout.
 
-Switching tabs in the middle of a heist trips the alarm.
+
 
 ## APIs
 

@@ -1,6 +1,8 @@
 # Still Life
 
-A stealth game in the browser. You steal real paintings from the Art Institute of Chicago while a security guard watches you through your webcam and listens through your microphone. When his footsteps stop, he's turning around, and you have to hold perfectly still.
+A stealth game in the browser. You steal real paintings from the Art Institute of Chicago while a security guard watches you through your webcam and listens through your microphone. When his footsteps stop, he's turning around, and you have to hold perfectly still
+
+
 
 ## How to play
 
